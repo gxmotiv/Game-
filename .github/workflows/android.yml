@@ -118,7 +118,7 @@ jobs:
       - name: Verify APK Architecture
         run: |
           echo "=== APK Info ==="
-          aapt dump badging build/game.apk | grep -E "package|application|sdkVersion|targetSdkVersion|native-code|abi"
+          $ANDROID_HOME/build-tools/34.0.0/aapt dump badging build/game.apk | grep -E "package|application|sdkVersion|targetSdkVersion|native-code|abi"
           echo ""
           echo "=== APK Size ==="
           ls -lh build/game.apk
@@ -141,5 +141,5 @@ jobs:
           echo "**Build Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           if [ -f build/game.apk ]; then
             echo "**APK Size:** $(ls -lh build/game.apk | awk '{print $5}')" >> $GITHUB_STEP_SUMMARY
-            echo "**Architectures:** $(aapt dump badging build/game.apk | grep native-code | sed 's/.*native-code: //' | tr -d "'")" >> $GITHUB_STEP_SUMMARY
+            echo "**Architectures:** $($ANDROID_HOME/build-tools/34.0.0/aapt dump badging build/game.apk | grep native-code | sed 's/.*native-code: //' | tr -d "'")" >> $GITHUB_STEP_SUMMARY
           fi
