@@ -84,6 +84,11 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates/4.7.2.stable
           cd ~/.local/share/godot/export_templates/4.7.2.stable
           unzip -q ~/.cache/godot/templates.tpz
+          # Move templates from subdirectory to current directory
+          if [ -d "templates" ]; then
+            mv templates/* .
+            rmdir templates
+          fi
           ls -la
 
       - name: Verify Godot Installation
