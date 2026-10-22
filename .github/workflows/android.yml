@@ -1,4 +1,4 @@
-name: Android Debug Build
+name: Android Debug Build (4.4 Multi-Arch)
 
 on:
   push:
