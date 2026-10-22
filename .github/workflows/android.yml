@@ -36,16 +36,20 @@ jobs:
           distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            platforms;android-${{ env.ANDROID_SDK_VERSION }}
-            build-tools;${{ env.ANDROID_BUILD_TOOLS_VERSION }}
-            ndk;${{ env.ANDROID_NDK_VERSION }}
-            cmake;${{ env.CMAKE_VERSION }}
-            platform-tools
-          cmdline-tools-version: "latest"
+      - name: Install Android SDK
+        run: |
+          # Android SDK is pre-installed on ubuntu-latest
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          # Accept licenses
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          # Install required packages
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            "platforms;android-${{ env.ANDROID_SDK_VERSION }}" \
+            "build-tools;${{ env.ANDROID_BUILD_TOOLS_VERSION }}" \
+            "ndk;${{ env.ANDROID_NDK_VERSION }}" \
+            "cmake;${{ env.CMAKE_VERSION }}" \
+            "platform-tools"
 
       - name: Cache Godot and Export Templates
         id: cache-godot
