@@ -66,6 +66,7 @@ jobs:
         if: steps.cache-godot.outputs.cache-hit != 'true'
         run: |
           mkdir -p ~/.cache/godot
+          mkdir -p ~/.local/bin
           cd ~/.cache/godot
           GODOT_URL="https://github.com/godotengine/godot-builds/releases/download/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}_linux.x86_64.zip"
           TEMPLATES_URL="https://github.com/godotengine/godot-builds/releases/download/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}_export_templates.tpz"
