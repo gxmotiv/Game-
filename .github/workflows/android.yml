@@ -81,65 +81,77 @@ jobs:
           chmod +x Godot_v${{ env.GODOT_VERSION }}_linux.x86_64
           ln -sf ~/.cache/godot/Godot_v${{ env.GODOT_VERSION }}_linux.x86_64 ~/.local/bin/godot
           
-          # Download Godot source code for building export templates
+          # Download Godot source code for building arm32 export template
           cd /home/runner/work/Game-
           git clone --depth 1 --branch ${{ env.GODOT_VERSION }} https://github.com/godotengine/godot.git godot-source
 
-      - name: Build Android Export Templates (arm64-v8a + armeabi-v7a)
+      - name: Build Android arm32 (armeabi-v7a) Export Template
         if: steps.cache-godot.outputs.cache-hit != 'true'
         run: |
           cd /home/runner/work/Game-/godot-source
           
-          # Build arm64-v8a template
-          echo "Building Android arm64-v8a export template..."
-          scons platform=android arch=arm64 target=template_release -j$(nproc)
-          scons platform=android arch=arm64 target=template_debug -j$(nproc)
-          
-          # Build armeabi-v7a template
-          echo "Building Android armeabi-v7a export template..."
-          scons platform=android arch=arm32 target=template_release -j$(nproc)
+          # Build armeabi-v7a template (both debug and release)
+          echo "Building Android armeabi-v7a export template (debug)..."
           scons platform=android arch=arm32 target=template_debug -j$(nproc)
           
-          # Package templates
+          echo "Building Android armeabi-v7a export template (release)..."
+          scons platform=android arch=arm32 target=template_release -j$(nproc)
+          
+          # Verify outputs
+          ls -la bin/libgodot.android.template_debug.arm32.so
+          ls -la bin/libgodot.android.template_release.arm32.so
+
+      - name: Download Official arm64 Export Templates
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.cache/godot
+          cd ~/.cache/godot
+          TEMPLATES_URL="https://github.com/godotengine/godot-builds/releases/download/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}_export_templates.tpz"
+          echo "Downloading official export templates from $TEMPLATES_URL"
+          wget -q "$TEMPLATES_URL" -O templates.tpz
+          unzip -oq templates.tpz
+          # Move templates from subdirectory to current directory
+          if [ -d "templates" ]; then
+            mv templates/* .
+            rmdir templates
+          fi
+          ls -la
+
+      - name: Merge arm32 libs into Official arm64 Export Templates
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
           mkdir -p ~/.local/share/godot/export_templates/4.7.2.stable
-          cp bin/godot.android.template_release.arm64 ~/.local/share/godot/export_templates/4.7.2.stable/android_release.apk
-          cp bin/godot.android.template_debug.arm64 ~/.local/share/godot/export_templates/4.7.2.stable/android_debug.apk
           
-          # Note: Godot 4.x expects both architectures in the same APK
-          # We need to merge them. The standard approach is to use the arm64 APK as base
-          # and add arm32 libs to it. But Godot's export system handles this automatically
-          # if both template APKs are present with correct naming.
+          # Copy official arm64 templates as base
+          cp ~/.cache/godot/android_debug.apk ~/.local/share/godot/export_templates/4.7.2.stable/
+          cp ~/.cache/godot/android_release.apk ~/.local/share/godot/export_templates/4.7.2.stable/
           
-          # Actually, Godot 4.x uses a single template APK per target (debug/release)
-          # that contains BOTH architectures. We need to build a combined template.
-          # The proper way is to build with both architectures in one go, but SCons doesn't support that directly.
-          # Instead, we build the arm64 template, then manually add arm32 libs.
-          
-          # For now, let's use the arm64 template as base and inject arm32 libs
-          # This is a workaround - the proper fix is multi-arch template building
-          
-          # Create a combined debug template
           cd ~/.local/share/godot/export_templates/4.7.2.stable
+          
+          # Merge arm32 libs into debug template
+          echo "Merging arm32 libs into debug template..."
           unzip -oq android_debug.apk -d android_debug_arm64
-          unzip -oq /home/runner/work/Game-/godot-source/bin/godot.android.template_debug.arm32 -d android_debug_arm32
+          mkdir -p android_debug_arm64/lib/armeabi-v7a
+          cp /home/runner/work/Game-/godot-source/bin/libgodot.android.template_debug.arm32.so android_debug_arm64/lib/armeabi-v7a/libgodot_android.so
+          # Also copy libc++_shared.so for arm32
+          cp $ANDROID_HOME/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so android_debug_arm64/lib/armeabi-v7a/
           
-          # Merge arm32 libs into arm64 template
-          cp -r android_debug_arm32/lib/armeabi-v7a android_debug_arm64/lib/
-          
-          # Repackage
           cd android_debug_arm64
           zip -r ../android_debug.apk .
           cd ..
-          rm -rf android_debug_arm64 android_debug_arm32
+          rm -rf android_debug_arm64
           
-          # Same for release
+          # Merge arm32 libs into release template
+          echo "Merging arm32 libs into release template..."
           unzip -oq android_release.apk -d android_release_arm64
-          unzip -oq /home/runner/work/Game-/godot-source/bin/godot.android.template_release.arm32 -d android_release_arm32
-          cp -r android_release_arm32/lib/armeabi-v7a android_release_arm64/lib/
+          mkdir -p android_release_arm64/lib/armeabi-v7a
+          cp /home/runner/work/Game-/godot-source/bin/libgodot.android.template_release.arm32.so android_release_arm64/lib/armeabi-v7a/libgodot_android.so
+          cp $ANDROID_HOME/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so android_release_arm64/lib/armeabi-v7a/
+          
           cd android_release_arm64
           zip -r ../android_release.apk .
           cd ..
-          rm -rf android_release_arm64 android_release_arm32
+          rm -rf android_release_arm64
           
           ls -la
 
