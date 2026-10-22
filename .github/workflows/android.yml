@@ -39,11 +39,13 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          api-level: ${{ env.ANDROID_SDK_VERSION }}
-          build-tools-version: ${{ env.ANDROID_BUILD_TOOLS_VERSION }}
-          ndk-version: ${{ env.ANDROID_NDK_VERSION }}
-          cmake-version: ${{ env.CMAKE_VERSION }}
-          cache-key: android-sdk-${{ env.ANDROID_SDK_VERSION }}-${{ env.ANDROID_BUILD_TOOLS_VERSION }}-${{ env.ANDROID_NDK_VERSION }}-${{ env.CMAKE_VERSION }}
+          packages: |
+            platforms;android-${{ env.ANDROID_SDK_VERSION }}
+            build-tools;${{ env.ANDROID_BUILD_TOOLS_VERSION }}
+            ndk;${{ env.ANDROID_NDK_VERSION }}
+            cmake;${{ env.CMAKE_VERSION }}
+            platform-tools
+          cmdline-tools-version: "latest"
 
       - name: Cache Godot and Export Templates
         id: cache-godot
