@@ -1,0 +1,309 @@
+[gd_scene load_steps=40 format=3 uid="uid://maingame"]
+
+[ext_resource type="Script" path="res://scripts/MainGame.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/level/Level.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/ui/VirtualJoystick.tscn" id="4"]
+
+[sub_resource type="VBoxContainer" id="4"]
+layout_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+
+[sub_resource type="HBoxContainer" id="5"]
+layout_mode = 2
+anchors_preset = 6
+
+[sub_resource type="Label" id="6"]
+text = "STEALTH GAME"
+horizontal_alignment = 1
+layout_mode = 2
+anchors_preset = 6
+custom_minimum_size = Vector2(0, 50)
+
+[sub_resource type="ProgressBar" id="7"]
+min_value = 0.0
+max_value = 100.0
+value = 0.0
+size = Vector2(200, 20)
+layout_mode = 2
+anchors_preset = 6
+
+[sub_resource type="Label" id="8"]
+text = "DETECTION"
+horizontal_alignment = 1
+layout_mode = 2
+anchors_preset = 6
+custom_minimum_size = Vector2(0, 20)
+
+[sub_resource type="VBoxContainer" id="9"]
+layout_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+visible = false
+
+[sub_resource type="Panel" id="10"]
+layout_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
+modulate = Color(0, 0, 0, 0.8)
+
+[sub_resource type="VBoxContainer" id="11"]
+layout_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -100.0
+offset_right = 150.0
+offset_bottom = 100.0
+
+[sub_resource type="Label" id="12"]
+text = "PAUSED"
+horizontal_alignment = 1
+custom_minimum_size = Vector2(0, 50)
+
+[sub_resource type="Button" id="13"]
+text = "Resume"
+custom_minimum_size = Vector2(200, 40)
+
+[sub_resource type="Button" id="14"]
+text = "Restart"
+custom_minimum_size = Vector2(200, 40)
+
+[sub_resource type="Button" id="15"]
+text = "Settings"
+custom_minimum_size = Vector2(200, 40)
+
+[sub_resource type="Button" id="16"]
+text = "Quit"
+custom_minimum_size = Vector2(200, 40)
+
+[sub_resource type="VBoxContainer" id="17"]
+layout_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
+visible = false
+
+[sub_resource type="Panel" id="18"]
+layout_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
+modulate = Color(0, 0, 0, 0.8)
+
+[sub_resource type="VBoxContainer" id="19"]
+layout_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -100.0
+offset_right = 150.0
+offset_bottom = 100.0
+
+[sub_resource type="Label" id="20"]
+text = "GAME OVER"
+horizontal_alignment = 1
+custom_minimum_size = Vector2(0, 50)
+
+[sub_resource type="Label" id="21"]
+name = "Message"
+text = "CAUGHT!"
+horizontal_alignment = 1
+custom_minimum_size = Vector2(0, 50)
+
+[sub_resource type="Button" id="22"]
+text = "Restart"
+custom_minimum_size = Vector2(200, 40)
+
+[sub_resource type="Button" id="23"]
+text = "Quit"
+custom_minimum_size = Vector2(200, 40)
+
+[sub_resource type="VBoxContainer" id="24"]
+layout_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
+visible = false
+
+[sub_resource type="Panel" id="25"]
+layout_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
+modulate = Color(0, 0, 0, 0.8)
+
+[sub_resource type="VBoxContainer" id="26"]
+layout_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -100.0
+offset_right = 150.0
+offset_bottom = 100.0
+
+[sub_resource type="Label" id="27"]
+text = "SETTINGS"
+horizontal_alignment = 1
+custom_minimum_size = Vector2(0, 50)
+
+[sub_resource type="CheckButton" id="28"]
+name = "TapMoveToggle"
+text = "Tap to Move"
+custom_minimum_size = Vector2(200, 40)
+
+[sub_resource type="CheckButton" id="29"]
+name = "DetectionMeterToggle"
+text = "Show Detection Meter"
+custom_minimum_size = Vector2(200, 40)
+
+[sub_resource type="HSlider" id="30"]
+name = "MusicVolumeSlider"
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 0.7
+custom_minimum_size = Vector2(200, 40)
+
+[sub_resource type="HSlider" id="31"]
+name = "SfxVolumeSlider"
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 0.8
+custom_minimum_size = Vector2(200, 40)
+
+[sub_resource type="Button" id="32"]
+text = "Back"
+custom_minimum_size = Vector2(200, 40)
+
+[node name="MainGame" type="Node2D" script="1"]
+
+[node name="Level" type="Node2D" instance=ExtResource("2")]
+
+[node name="Player" type="CharacterBody2D" instance=ExtResource("3")]
+global_position = Vector2(100, 100)
+
+[node name="HUD" type="CanvasLayer"]
+layer = 10
+
+[node name="VirtualJoystick" type="Control" parent="HUD" instance=ExtResource("4")]
+
+[node name="TopHUD" type="VBoxContainer" parent="HUD" instance=SubResource("4")]
+
+[node name="TitleAndDetection" type="HBoxContainer" parent="HUD/TopHUD" instance=SubResource("5")]
+
+[node name="Title" type="Label" parent="HUD/TopHUD/TitleAndDetection" instance=SubResource("6")]
+
+[node name="DetectionContainer" type="VBoxContainer" parent="HUD/TopHUD/TitleAndDetection"]
+layout_mode = 2
+anchors_preset = 6
+
+[node name="DetectionLabel" type="Label" parent="HUD/TopHUD/TitleAndDetection/DetectionContainer" instance=SubResource("8")]
+
+[node name="DetectionBar" type="ProgressBar" parent="HUD/TopHUD/TitleAndDetection/DetectionContainer" instance=SubResource("7")]
+
+[node name="PauseMenu" type="Control" parent="HUD" instance=SubResource("9")]
+
+[node name="PausePanel" type="Panel" parent="HUD/PauseMenu" instance=SubResource("10")]
+
+[node name="PauseButtons" type="VBoxContainer" parent="HUD/PauseMenu" instance=SubResource("11")]
+
+[node name="PauseTitle" type="Label" parent="HUD/PauseMenu/PauseButtons" instance=SubResource("12")]
+
+[node name="ResumeButton" type="Button" parent="HUD/PauseMenu/PauseButtons" instance=SubResource("13")]
+
+[node name="RestartButton" type="Button" parent="HUD/PauseMenu/PauseButtons" instance=SubResource("14")]
+
+[node name="SettingsButton" type="Button" parent="HUD/PauseMenu/PauseButtons" instance=SubResource("15")]
+
+[node name="QuitButton" type="Button" parent="HUD/PauseMenu/PauseButtons" instance=SubResource("16")]
+
+[node name="GameOverMenu" type="Control" parent="HUD" instance=SubResource("17")]
+
+[node name="GameOverPanel" type="Panel" parent="HUD/GameOverMenu" instance=SubResource("18")]
+
+[node name="GameOverButtons" type="VBoxContainer" parent="HUD/GameOverMenu" instance=SubResource("19")]
+
+[node name="GameOverTitle" type="Label" parent="HUD/GameOverMenu/GameOverButtons" instance=SubResource("20")]
+
+[node name="Message" type="Label" parent="HUD/GameOverMenu/GameOverButtons" instance=SubResource("21")]
+
+[node name="GameOverRestartButton" type="Button" parent="HUD/GameOverMenu/GameOverButtons" instance=SubResource("22")]
+
+[node name="GameOverQuitButton" type="Button" parent="HUD/GameOverMenu/GameOverButtons" instance=SubResource("23")]
+
+[node name="SettingsMenu" type="Control" parent="HUD" instance=SubResource("24")]
+
+[node name="SettingsPanel" type="Panel" parent="HUD/SettingsMenu" instance=SubResource("25")]
+
+[node name="SettingsButtons" type="VBoxContainer" parent="HUD/SettingsMenu" instance=SubResource("26")]
+
+[node name="SettingsTitle" type="Label" parent="HUD/SettingsMenu/SettingsButtons" instance=SubResource("27")]
+
+[node name="TapMoveToggle" type="CheckButton" parent="HUD/SettingsMenu/SettingsButtons" instance=SubResource("28")]
+
+[node name="DetectionMeterToggle" type="CheckButton" parent="HUD/SettingsMenu/SettingsButtons" instance=SubResource("29")]
+
+[node name="MusicVolumeLabel" type="Label" parent="HUD/SettingsMenu/SettingsButtons"]
+text = "Music Volume"
+horizontal_alignment = 1
+custom_minimum_size = Vector2(0, 20)
+
+[node name="MusicVolumeSlider" type="HSlider" parent="HUD/SettingsMenu/SettingsButtons" instance=SubResource("30")]
+
+[node name="SfxVolumeLabel" type="Label" parent="HUD/SettingsMenu/SettingsButtons"]
+text = "SFX Volume"
+horizontal_alignment = 1
+custom_minimum_size = Vector2(0, 20)
+
+[node name="SfxVolumeSlider" type="HSlider" parent="HUD/SettingsMenu/SettingsButtons" instance=SubResource("31")]
+
+[node name="BackButton" type="Button" parent="HUD/SettingsMenu/SettingsButtons" instance=SubResource("32")]
+
+[connection signal="pressed" from="HUD/PauseMenu/PauseButtons/ResumeButton" to="." method="_on_pause_resume_pressed"]
+[connection signal="pressed" from="HUD/PauseMenu/PauseButtons/RestartButton" to="." method="_on_pause_restart_pressed"]
+[connection signal="pressed" from="HUD/PauseMenu/PauseButtons/SettingsButton" to="." method="_on_pause_settings_pressed"]
+[connection signal="pressed" from="HUD/PauseMenu/PauseButtons/QuitButton" to="." method="_on_pause_quit_pressed"]
+[connection signal="pressed" from="HUD/GameOverMenu/GameOverButtons/GameOverRestartButton" to="." method="_on_game_over_restart_pressed"]
+[connection signal="pressed" from="HUD/GameOverMenu/GameOverButtons/GameOverQuitButton" to="." method="_on_game_over_quit_pressed"]
+[connection signal="toggled" from="HUD/SettingsMenu/SettingsButtons/TapMoveToggle" to="." method="_on_settings_tap_move_toggled"]
+[connection signal="toggled" from="HUD/SettingsMenu/SettingsButtons/DetectionMeterToggle" to="." method="_on_settings_detection_meter_toggled"]
+[connection signal="value_changed" from="HUD/SettingsMenu/SettingsButtons/MusicVolumeSlider" to="." method="_on_settings_music_volume_changed"]
+[connection signal="value_changed" from="HUD/SettingsMenu/SettingsButtons/SfxVolumeSlider" to="." method="_on_settings_sfx_volume_changed"]
+[connection signal="pressed" from="HUD/SettingsMenu/SettingsButtons/BackButton" to="." method="_on_settings_back_pressed"]

@@ -1,0 +1,145 @@
+name: Android Debug Build
+
+on:
+  push:
+    branches: [kilo/briny-crane-766, main]
+  pull_request:
+    branches: [kilo/briny-crane-766, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  GODOT_VERSION: "4.7.2-stable"
+  GODOT_CHANNEL: "stable"
+  ANDROID_SDK_VERSION: "34"
+  ANDROID_BUILD_TOOLS_VERSION: "34.0.0"
+  ANDROID_NDK_VERSION: "27.0.12077973"
+  CMAKE_VERSION: "3.22.1"
+  JAVA_VERSION: "17"
+
+jobs:
+  build-android-debug:
+    name: Build Android Debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Install Android SDK
+        run: |
+          # Android SDK is pre-installed on ubuntu-latest
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          # Accept licenses
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          # Install required packages
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            "platforms;android-${{ env.ANDROID_SDK_VERSION }}" \
+            "build-tools;${{ env.ANDROID_BUILD_TOOLS_VERSION }}" \
+            "ndk;${{ env.ANDROID_NDK_VERSION }}" \
+            "cmake;${{ env.CMAKE_VERSION }}" \
+            "platform-tools"
+
+      - name: Cache Godot and Export Templates
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/godot
+            ~/.local/share/godot/export_templates/4.7.2.stable
+          key: godot-4.7.2.stable-${{ hashFiles('project.godot', 'export_presets.cfg') }}
+          restore-keys: |
+            godot-4.7.2.stable-
+
+      - name: Download Godot Headless
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.cache/godot
+          mkdir -p ~/.local/bin
+          cd ~/.cache/godot
+          GODOT_URL="https://github.com/godotengine/godot-builds/releases/download/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}_linux.x86_64.zip"
+          TEMPLATES_URL="https://github.com/godotengine/godot-builds/releases/download/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}_export_templates.tpz"
+          echo "Downloading Godot from $GODOT_URL"
+          wget -q "$GODOT_URL" -O godot.zip
+          echo "Downloading export templates from $TEMPLATES_URL"
+          wget -q "$TEMPLATES_URL" -O templates.tpz
+          unzip -oq godot.zip
+          chmod +x Godot_v${{ env.GODOT_VERSION }}_linux.x86_64
+          ln -sf ~/.cache/godot/Godot_v${{ env.GODOT_VERSION }}_linux.x86_64 ~/.local/bin/godot
+
+      - name: Install Export Templates
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/4.7.2.stable
+          cd ~/.local/share/godot/export_templates/4.7.2.stable
+          unzip -oq ~/.cache/godot/templates.tpz
+          # Move templates from subdirectory to current directory
+          if [ -d "templates" ]; then
+            mv templates/* .
+            rmdir templates
+          fi
+          ls -la
+
+      - name: Verify Godot Installation
+        run: |
+          godot --version
+          ls -la ~/.local/share/godot/export_templates/4.7.2.stable/
+
+      - name: Create Debug Keystore
+        run: |
+          keytool -genkeypair -v \
+            -keystore debug.keystore \
+            -alias androiddebugkey \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US" \
+            -storepass android \
+            -keypass android
+          mkdir -p ~/.android
+          cp debug.keystore ~/.android/debug.keystore
+
+      - name: Export Android Debug APK
+        run: |
+          mkdir -p build
+          godot --headless --export-debug "Android" build/game.apk
+
+      - name: Verify APK Architecture
+        run: |
+          echo "=== APK Info ==="
+          $ANDROID_HOME/build-tools/34.0.0/aapt dump badging build/game.apk | grep -E "package|application|sdkVersion|targetSdkVersion|native-code|abi"
+          echo ""
+          echo "=== APK Size ==="
+          ls -lh build/game.apk
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-debug-apk
+          path: build/game.apk
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Build Summary
+        if: always()
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Godot Version:** ${{ env.GODOT_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Android SDK:** ${{ env.ANDROID_SDK_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**NDK:** ${{ env.ANDROID_NDK_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          if [ -f build/game.apk ]; then
+            echo "**APK Size:** $(ls -lh build/game.apk | awk '{print $5}')" >> $GITHUB_STEP_SUMMARY
+            echo "**Architectures:** $($ANDROID_HOME/build-tools/34.0.0/aapt dump badging build/game.apk | grep native-code | sed 's/.*native-code: //' | tr -d "'")" >> $GITHUB_STEP_SUMMARY
+          fi
