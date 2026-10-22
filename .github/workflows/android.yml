@@ -74,7 +74,7 @@ jobs:
           wget -q "$GODOT_URL" -O godot.zip
           echo "Downloading export templates from $TEMPLATES_URL"
           wget -q "$TEMPLATES_URL" -O templates.tpz
-          unzip -q godot.zip
+          unzip -oq godot.zip
           chmod +x Godot_v${{ env.GODOT_VERSION }}_linux.x86_64
           ln -sf ~/.cache/godot/Godot_v${{ env.GODOT_VERSION }}_linux.x86_64 ~/.local/bin/godot
 
@@ -83,7 +83,7 @@ jobs:
         run: |
           mkdir -p ~/.local/share/godot/export_templates/4.7.2.stable
           cd ~/.local/share/godot/export_templates/4.7.2.stable
-          unzip -q ~/.cache/godot/templates.tpz
+          unzip -oq ~/.cache/godot/templates.tpz
           # Move templates from subdirectory to current directory
           if [ -d "templates" ]; then
             mv templates/* .
