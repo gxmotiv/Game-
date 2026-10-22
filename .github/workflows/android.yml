@@ -57,10 +57,10 @@ jobs:
         with:
           path: |
             ~/.cache/godot
-            ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}
-          key: godot-${{ env.GODOT_VERSION }}-${{ hashFiles('project.godot', 'export_presets.cfg') }}
+            ~/.local/share/godot/export_templates/4.7.2.stable
+          key: godot-4.7.2.stable-${{ hashFiles('project.godot', 'export_presets.cfg') }}
           restore-keys: |
-            godot-${{ env.GODOT_VERSION }}-
+            godot-4.7.2.stable-
 
       - name: Download Godot Headless
         if: steps.cache-godot.outputs.cache-hit != 'true'
@@ -81,15 +81,15 @@ jobs:
       - name: Install Export Templates
         if: steps.cache-godot.outputs.cache-hit != 'true'
         run: |
-          mkdir -p ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}
-          cd ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}
+          mkdir -p ~/.local/share/godot/export_templates/4.7.2.stable
+          cd ~/.local/share/godot/export_templates/4.7.2.stable
           unzip -q ~/.cache/godot/templates.tpz
           ls -la
 
       - name: Verify Godot Installation
         run: |
           godot --version
-          ls -la ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}/
+          ls -la ~/.local/share/godot/export_templates/4.7.2.stable/
 
       - name: Create Debug Keystore
         run: |

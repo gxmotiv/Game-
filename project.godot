@@ -113,10 +113,11 @@ physics/common/physics_ticks_per_second=60
 
 [autoload]
 
-InputManager="*res://scripts/systems/InputManager.gd"
-GameManager="*res://scripts/systems/GameManager.gd"
-SaveSystem="*res://scripts/systems/SaveSystem.gd"
-AudioManager="*res://scripts/systems/AudioManager.gd"
+; InputManager="*res://scripts/systems/InputManager.gd"
+; GameManager="*res://scripts/systems/GameManager.gd"
+; SaveSystem="*res://scripts/systems/SaveSystem.gd"
+; AudioManager="*res://scripts/systems/AudioManager.gd"
+; Autoloads will be added in Phase C when scripts are created
 
 [editor]
 
@@ -126,4 +127,4 @@ interface/inspector/default_scroll_past_end=false
 [project]
 
 config_version=5
-godot_version="4.4.stable"
+godot_version="4.7.2"
