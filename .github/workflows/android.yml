@@ -1,4 +1,4 @@
-name: Android Debug Build (4.4 Multi-Arch)
+name: Android Debug Build
 
 on:
   push:
@@ -21,7 +21,7 @@ env:
 
 jobs:
   build-android-debug:
-    name: Build Android Debug APK (Multi-Arch: arm64 + arm32)
+    name: Build Android Debug APK (4.4 Multi-Arch)
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -54,9 +54,9 @@ jobs:
           path: |
             ~/.cache/godot
             ~/.local/share/godot/export_templates/4.4.stable
-          key: godot-4.4.stable-${{ hashFiles('project.godot', 'export_presets.cfg') }}
+          key: godot-4.4.stable-fast-${{ hashFiles('project.godot', 'export_presets.cfg') }}
           restore-keys: |
-            godot-4.4.stable-
+            godot-4.4.stable-fast-
 
       - name: Download Godot Headless + Official Export Templates
         if: steps.cache-godot.outputs.cache-hit != 'true'
