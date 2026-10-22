@@ -19,7 +19,7 @@ window/vsync/vsync_mode=1
 
 rendering_device="Forward+"
 rendering_2d/gpu_canvas_shader/allow_gles2=true
-rendering/textures/vram_compression/import_etc2_astc="etc2_astc"
+rendering/textures/vram_compression/import_etc2_astc=1
 
 [input]
 
