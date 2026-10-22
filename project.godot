@@ -1,0 +1,129 @@
+; Engine configuration file for Godot 4.4
+; This file should be committed to version control
+
+[application]
+
+config/name="Stealth Game"
+config/icon="icon.svg"
+run/main_scene=""
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/resizable=true
+window/mode/window_mode=0
+window/vsync/vsync_mode=1
+
+[rendering]
+
+rendering_device="Forward+"
+rendering_2d/gpu_canvas_shader/allow_gles2=true
+
+[input]
+
+move_left={
+"deadzone": 0.5,
+"events": [
+{"type": "Key", "keycode": 37, "physical_keycode": 0},
+{"type": "JoyAxis", "axis": 0, "axis_value": -1.0}
+],
+"strength": 1.0
+}
+move_right={
+"deadzone": 0.5,
+"events": [
+{"type": "Key", "keycode": 39, "physical_keycode": 0},
+{"type": "JoyAxis", "axis": 0, "axis_value": 1.0}
+],
+"strength": 1.0
+}
+move_up={
+"deadzone": 0.5,
+"events": [
+{"type": "Key", "keycode": 38, "physical_keycode": 0},
+{"type": "JoyAxis", "axis": 1, "axis_value": -1.0}
+],
+"strength": 1.0
+}
+move_down={
+"deadzone": 0.5,
+"events": [
+{"type": "Key", "keycode": 40, "physical_keycode": 0},
+{"type": "JoyAxis", "axis": 1, "axis_value": 1.0}
+],
+"strength": 1.0
+}
+interact={
+"deadzone": 0.5,
+"events": [
+{"type": "Key", "keycode": 32, "physical_keycode": 0},
+{"type": "JoyButton", "button_index": 0}
+],
+"strength": 1.0
+}
+crouch={
+"deadzone": 0.5,
+"events": [
+{"type": "Key", "keycode": 16, "physical_keycode": 0},
+{"type": "JoyButton", "button_index": 2}
+],
+"strength": 1.0
+}
+pause={
+"deadzone": 0.5,
+"events": [
+{"type": "Key", "keycode": 27, "physical_keycode": 0},
+{"type": "JoyButton", "button_index": 9}
+],
+"strength": 1.0
+}
+tap_move={
+"deadzone": 0.5,
+"events": [
+{"type": "ScreenTouch", "index": 0}
+],
+"strength": 1.0
+}
+
+[physics]
+
+physics/common/physics_ticks_per_second=60
+
+[layer_names]
+
+2d_physics/layer_1="player"
+2d_physics/layer_2="guard"
+2d_physics/layer_3="wall"
+2d_physics/layer_4="door"
+2d_physics/layer_5="camera"
+2d_physics/layer_6="interactable"
+2d_render/layer_1="background"
+2d_render/layer_2="world"
+2d_render/layer_3="entities"
+2d_render/layer_4="effects"
+2d_render/layer_5="ui"
+3d_physics/layer_1="default"
+3d_physics/layer_2="static"
+3d_physics/layer_3="character"
+3d_physics/layer_4="sensor"
+3d_render/layer_1="default"
+3d_render/layer_2="transparent"
+3d_render/layer_3="post_process"
+
+[autoload]
+
+InputManager="*res://scripts/systems/InputManager.gd"
+GameManager="*res://scripts/systems/GameManager.gd"
+SaveSystem="*res://scripts/systems/SaveSystem.gd"
+AudioManager="*res://scripts/systems/AudioManager.gd"
+
+[editor]
+
+interface/editor/show_tooltips=true
+interface/inspector/default_scroll_past_end=false
+
+[project]
+
+config_version=5
+godot_version="4.4.stable"
