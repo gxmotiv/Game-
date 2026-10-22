@@ -24,7 +24,7 @@ jobs:
   build-android-debug:
     name: Build Android Debug APK (arm64 + arm32)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
       - name: Checkout repository
@@ -101,13 +101,29 @@ jobs:
           git clone --depth 1 --branch ${{ env.GODOT_VERSION }} https://github.com/godotengine/godot.git godot-source-arm32
           cd godot-source-arm32
           
-          # Build ONLY the arm32 shared library (much faster than full template)
+          # Build ONLY the arm32 shared library (optimized: disable 3D, physics, etc. for 2D game)
           echo "Building arm32 libgodot_android.so (debug)..."
-          scons platform=android arch=arm32 target=template_debug -j$(nproc) module_freetype_enabled=yes module_msdfgen_enabled=yes
+          scons platform=android arch=arm32 target=template_debug -j$(nproc) \
+            module_freetype_enabled=yes module_msdfgen_enabled=yes \
+            module_gltf_enabled=no module_physx_enabled=no module_box2d_enabled=no \
+            module_bullet_enabled=no module_vhacd_enabled=no \
+            module_webrtc_enabled=no module_mpv_enabled=no \
+            module_theora_enabled=no module_vorbis_enabled=no \
+            module_pvr_enabled=no module_jpg_enabled=no \
+            module_exr_enabled=no module_webp_enabled=no \
+            module_svg_enabled=no module_openxr_enabled=no
           
           echo "Building arm32 libgodot_android.so (release)..."
           rm -f .sconsign.dblite
-          scons platform=android arch=arm32 target=template_release -j$(nproc) module_freetype_enabled=yes module_msdfgen_enabled=yes
+          scons platform=android arch=arm32 target=template_release -j$(nproc) \
+            module_freetype_enabled=yes module_msdfgen_enabled=yes \
+            module_gltf_enabled=no module_physx_enabled=no module_box2d_enabled=no \
+            module_bullet_enabled=no module_vhacd_enabled=no \
+            module_webrtc_enabled=no module_mpv_enabled=no \
+            module_theora_enabled=no module_vorbis_enabled=no \
+            module_pvr_enabled=no module_jpg_enabled=no \
+            module_exr_enabled=no module_webp_enabled=no \
+            module_svg_enabled=no module_openxr_enabled=no
           
           # Verify outputs
           ls -la bin/libgodot.android.template_debug.arm32.so
