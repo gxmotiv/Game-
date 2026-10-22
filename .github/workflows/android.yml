@@ -97,8 +97,15 @@ jobs:
           echo "Building Android armeabi-v7a export template (debug)..."
           scons platform=android arch=arm32 target=template_debug -j$(nproc)
           
-          # Verify debug output exists
-          ls -la bin/libgodot.android.template_debug.arm32.so
+          # Verify debug output exists (with retry for filesystem sync)
+          for i in 1 2 3; do
+            if [ -f bin/libgodot.android.template_debug.arm32.so ]; then
+              ls -la bin/libgodot.android.template_debug.arm32.so
+              break
+            fi
+            echo "Waiting for debug template file... attempt $i"
+            sleep 2
+          done
           
           # Build release (force rebuild by removing scons cache)
           echo "Building Android armeabi-v7a export template (release)..."
@@ -106,6 +113,15 @@ jobs:
           scons platform=android arch=arm32 target=template_release -j$(nproc)
           
           # Verify outputs
+          for i in 1 2 3; do
+            if [ -f bin/libgodot.android.template_release.arm32.so ]; then
+              ls -la bin/libgodot.android.template_release.arm32.so
+              break
+            fi
+            echo "Waiting for release template file... attempt $i"
+            sleep 2
+          done
+          
           ls -la bin/libgodot.android.template_debug.arm32.so
           ls -la bin/libgodot.android.template_release.arm32.so
 
