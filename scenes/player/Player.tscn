@@ -1,0 +1,96 @@
+[gd_scene load_steps=3 format=3 uid="uid://player"]
+
+[ext_resource type="Script" path="res://scripts/player/Player.gd" id="1"]
+
+[sub_resource type="CollisionShape2D" id="2"]
+shape = SubResource("3")
+
+[sub_resource type="RectangleShape2D" id="3"]
+x = 16
+y = 24
+
+[sub_resource type="AnimatedSprite2D" id="4"]
+frames = SubResource("5")
+
+[sub_resource type="SpriteFrames" id="5"]
+animations = {
+"idle": [
+{
+"duration": 1.0,
+"texture": null
+}
+],
+"walk": [
+{
+"duration": 0.1,
+"texture": null
+},
+{
+"duration": 0.1,
+"texture": null
+},
+{
+"duration": 0.1,
+"texture": null
+},
+{
+"duration": 0.1,
+"texture": null
+}
+],
+"crouch_idle": [
+{
+"duration": 1.0,
+"texture": null
+}
+],
+"crouch_walk": [
+{
+"duration": 0.15,
+"texture": null
+},
+{
+"duration": 0.15,
+"texture": null
+},
+{
+"duration": 0.15,
+"texture": null
+},
+{
+"duration": 0.15,
+"texture": null
+}
+]
+}
+
+[sub_resource type="ProgressBar" id="6"]
+min_value = 0.0
+max_value = 100.0
+value = 0.0
+size = Vector2(40, 6)
+offset = Vector2(-20, -40)
+
+[node name="Player" type="CharacterBody2D" script="1"]
+collision_layer = 1
+collision_mask = 4
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." instance=SubResource("4")]
+position = Vector2(0, -16)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." instance=SubResource("2")]
+position = Vector2(0, -4)
+
+[node name="DetectionMeter" type="ProgressBar" parent="." instance=SubResource("6")]
+visible = false
+
+[node name="InteractionArea" type="Area2D" parent="."]
+collision_layer = 6
+collision_mask = 6
+position = Vector2(0, -16)
+
+[node name="InteractionShape" type="CollisionShape2D" parent="InteractionArea"]
+shape = SubResource("7")
+
+[sub_resource type="CircleShape2D" id="7"]
+radius = 32.0

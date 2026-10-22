@@ -5,7 +5,7 @@
 
 config/name="Stealth Game"
 config/icon="icon.svg"
-run/main_scene=""
+run/main_scene="res://scenes/MainGame.tscn"
 
 [display]
 
@@ -116,11 +116,10 @@ physics/common/physics_ticks_per_second=60
 
 [autoload]
 
-; InputManager="*res://scripts/systems/InputManager.gd"
-; GameManager="*res://scripts/systems/GameManager.gd"
-; SaveSystem="*res://scripts/systems/SaveSystem.gd"
-; AudioManager="*res://scripts/systems/AudioManager.gd"
-; Autoloads will be added in Phase C when scripts are created
+InputManager="*res://scripts/systems/InputManager.gd"
+GameManager="*res://scripts/systems/GameManager.gd"
+SaveSystem="*res://scripts/systems/SaveSystem.gd"
+AudioManager="*res://scripts/systems/AudioManager.gd"
 
 [editor]
 

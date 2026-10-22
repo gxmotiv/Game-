@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3 uid="uid://virtualjoystick"]
+
+[ext_resource type="Script" path="res://scripts/ui/VirtualJoystick.gd" id="1"]
+
+[sub_resource type="TextureRect" id="2"]
+size = Vector2(160, 160)
+
+[sub_resource type="TextureRect" id="3"]
+size = Vector2(80, 80)
+
+[node name="VirtualJoystick" type="Control" script="1"]
+layout_mode = 3
+anchors_preset = 9
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -180.0
+offset_top = -180.0
+offset_right = -20.0
+offset_bottom = -20.0
+
+[node name="Background" type="TextureRect" parent="." instance=SubResource("2")]
+visible = false
+
+[node name="Knob" type="TextureRect" parent="." instance=SubResource("3")]
+visible = false
