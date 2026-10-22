@@ -90,7 +90,10 @@ jobs:
         run: |
           cd /home/runner/work/Game-/godot-source
           
-          # Build armeabi-v7a template (both debug and release)
+          # Clean any previous builds to avoid cache conflicts
+          scons -c platform=android arch=arm32 2>/dev/null || true
+          
+          # Build armeabi-v7a template (debug first, then release)
           echo "Building Android armeabi-v7a export template (debug)..."
           scons platform=android arch=arm32 target=template_debug -j$(nproc)
           
