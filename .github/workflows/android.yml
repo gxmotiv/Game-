@@ -90,14 +90,19 @@ jobs:
         run: |
           cd /home/runner/work/Game-/godot-source
           
-          # Clean any previous builds to avoid cache conflicts
-          scons -c platform=android arch=arm32 2>/dev/null || true
+          # Remove SCons cache and bin directory to force clean build for arm32
+          rm -rf bin .sconsign.dblite
           
-          # Build armeabi-v7a template (debug first, then release)
+          # Build armeabi-v7a template (debug first)
           echo "Building Android armeabi-v7a export template (debug)..."
           scons platform=android arch=arm32 target=template_debug -j$(nproc)
           
+          # Verify debug output exists
+          ls -la bin/libgodot.android.template_debug.arm32.so
+          
+          # Build release (force rebuild by removing scons cache)
           echo "Building Android armeabi-v7a export template (release)..."
+          rm -f .sconsign.dblite
           scons platform=android arch=arm32 target=template_release -j$(nproc)
           
           # Verify outputs
