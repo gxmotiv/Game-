@@ -118,6 +118,25 @@ jobs:
           mkdir -p build
           godot --headless --export-debug "Android" build/game.apk
 
+      - name: Merge arm32 libs from template into exported APK
+        run: |
+          echo "Merging armeabi-v7a libs from template into exported APK..."
+          cd build
+          # Extract exported APK (arm64-only)
+          unzip -oq game.apk -d game_arm64
+          # Extract template debug APK (has all architectures)
+          unzip -oq ~/.local/share/godot/export_templates/4.4.stable/android_debug.apk -d template_debug
+          # Copy arm32 libs
+          mkdir -p game_arm64/lib/armeabi-v7a
+          cp template_debug/lib/armeabi-v7a/libgodot_android.so game_arm64/lib/armeabi-v7a/
+          cp template_debug/lib/armeabi-v7a/libc++_shared.so game_arm64/lib/armeabi-v7a/
+          # Repackage
+          cd game_arm64
+          zip -r ../game.apk .
+          cd ..
+          rm -rf game_arm64 template_debug
+          echo "Merge complete"
+
       - name: Verify APK Architecture
         run: |
           echo "=== APK Info ==="
