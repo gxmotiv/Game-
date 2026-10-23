@@ -25,19 +25,16 @@ fi
 # Find Android SDK and build tools
 ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
 BUILD_TOOLS_DIR="${ANDROID_HOME}/build-tools/34.0.0"
-AAPT2="${BUILD_TOOLS_DIR}/aapt2"
-ZIPALIGN="${BUILD_TOOLS_DIR}/zipalign"
-APKSIGNER="${BUILD_TOOLS_DIR}/apksigner"
+AAPT2="${ANDROID_HOME}/build-tools/34.0.0/aapt2"
+ZIPALIGN="${ANDROID_HOME}/build-tools/34.0.0/zipalign"
+APKSIGNER="${ANDROID_HOME}/build-tools/34.0.0/apksigner"
 PLATFORM_JAR="${ANDROID_HOME}/platforms/android-34/android.jar"
 
 if [ ! -f "$AAPT2" ]; then
     echo "Error: aapt2 not found at $AAPT2"
-    echo "Available build tools:"
-    ls -la "${ANDROID_HOME}/build-tools/" || true
     exit 1
 fi
 
-echo "Using aapt2 at: $AAPT2"
 echo "Fixing AndroidManifest.xml to remove adaptive icon references..."
 
 # Create temp directory
@@ -48,7 +45,7 @@ cd "$TMPDIR"
 cp "$APK_PATH" game.apk
 cp "$KEYSTORE_PATH" debug.keystore
 
-echo "Fixing AndroidManifest.xml to remove adaptive icon references..."
+echo "Creating minimal manifest without adaptive icon references..."
 
 # Create minimal manifest without adaptive icons using Python
 python3 -c "
@@ -93,45 +90,29 @@ ET.ElementTree(manifest).write('AndroidManifest.xml', encoding='utf-8', xml_decl
 "
 
 # Use full paths to Android SDK tools
-AAPT2="${BUILD_TOOLS_DIR}/aapt2"
-ZIPALIGN="${BUILD_TOOLS_DIR}/zipalign"
-APKSIGNER="${BUILD_TOOLS_DIR}/apksigner"
+AAPT2="${ANDROID_HOME}/build-tools/34.0.0/aapt2"
+ZIPALIGN="${ANDROID_HOME}/build-tools/34.0.0/zipalign"
+APKSIGNER="${ANDROID_HOME}/build-tools/34.0.0/apksigner"
 PLATFORM_JAR="${ANDROID_HOME}/platforms/android-34/android.jar"
 
-if [ ! -f "$AAPT2" ]; then
-    echo "Error: aapt2 not found at $AAPT2"
-    exit 1
-fi
+# Compile our text manifest to binary XML using aapt2
+"$AAPT2" compile -o manifest.flat AndroidManifest.xml
 
-# Extract APK
+# Extract original APK
 unzip -oq game.apk -d apk_out
 
-# Compile resources
-"$AAPT2" compile --dir apk_out/res -o compiled_resources.zip
+# Replace the binary manifest in the extracted APK
+# The manifest in the APK is at AndroidManifest.xml (binary XML)
+cp manifest.flat apk_out/AndroidManifest.xml
 
-# Link manifest and resources
-"$AAPT2" link \
-  --manifest AndroidManifest.xml \
-  -I "$PLATFORM_JAR" \
-  -o fixed.apk \
-  --java /dev/null \
-  compiled_resources.zip
-
-# Merge fixed manifest/resources back
-unzip -oq fixed.apk -d fixed_out
-cd apk_out
-cp ../fixed_out/AndroidManifest.xml AndroidManifest.xml
-cp -r ../fixed_out/res/* res/
-cd ..
-
-# Repackage
+# Repackage APK without recompiling resources (just zip)
 cd apk_out
 zip -r0 ../game_fixed.apk .
 cd ..
 
 # Align and sign
-"$ZIPALIGN" -f -p 4 game_fixed.apk game_aligned.apk
-"$APKSIGNER" sign \
+"${ANDROID_HOME}/build-tools/34.0.0/zipalign" -f -p 4 game_fixed.apk game_aligned.apk
+"${ANDROID_HOME}/build-tools/34.0.0/apksigner" sign \
   --ks debug.keystore \
   --ks-pass pass:android \
   --key-pass pass:android \
@@ -145,6 +126,6 @@ cd ..
 cp game.apk "$WORKSPACE/build/game.apk"
 
 # Cleanup
-rm -rf apk_out fixed_out compiled_resources.zip fixed.apk game_fixed.apk game_aligned.apk AndroidManifest.xml game.apk debug.keystore
+rm -rf apk_out game_fixed.apk game_aligned.apk AndroidManifest.xml manifest.flat game.apk debug.keystore
 
 echo "Manifest fixed and APK repackaged"
