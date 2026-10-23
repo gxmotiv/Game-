@@ -6,8 +6,11 @@ set -e
 
 APK_PATH="$1"
 KEYSTORE_PATH="$2"
-ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
-BUILD_TOOLS="${ANDROID_HOME}/build-tools/34.0.0"
+
+# Convert to absolute paths
+APK_PATH=$(realpath "$APK_PATH")
+KEYSTORE_PATH=$(realpath "$KEYSTORE_PATH")
+WORKSPACE=$(pwd)
 
 if [ ! -f "$APK_PATH" ]; then
     echo "Error: APK not found at $APK_PATH"
@@ -25,8 +28,11 @@ echo "Fixing AndroidManifest.xml to remove adaptive icon references..."
 TMPDIR=$(mktemp -d)
 cd "$TMPDIR"
 
-# Extract APK
-unzip -oq "$APK_PATH" -d apk_out
+# Copy APK and keystore to temp dir
+cp "$APK_PATH" game.apk
+cp "$KEYSTORE_PATH" debug.keystore
+
+echo "Fixing AndroidManifest.xml to remove adaptive icon references..."
 
 # Create minimal manifest without adaptive icons using Python
 python3 -c "
@@ -56,7 +62,7 @@ application = ET.SubElement(manifest, 'application', {
     '{http://schemas.android.com/apk/res/android}theme': '@android:style/Theme.NoTitleBar.Fullscreen',
     '{http://schemas.android.com/apk/res/android}hardwareAccelerated': 'true'
 })
-activity = ET.SubElement(manifest.find('application'), 'activity', {
+activity = ET.SubElement(manifest, 'activity', {
     '{http://schemas.android.com/apk/res/android}name': 'com.godot.GodotActivity',
     '{http://schemas.android.com/apk/res/android}label': 'Stealth Game',
     '{http://schemas.android.com/apk/res/android}configChanges': 'orientation|screenSize|keyboardHidden|navigation',
@@ -74,8 +80,8 @@ ET.ElementTree(manifest).write('AndroidManifest.xml', encoding='utf-8', xml_decl
 ANDROID_HOME="${ANDROID_HOME:-/usr/lib/android-sdk}"
 BUILD_TOOLS="${ANDROID_HOME}/build-tools/34.0.0"
 
-# Extract APK resources
-unzip -oq game.apk -d apk_out 2>/dev/null || true
+# Extract APK
+unzip -oq game.apk -d apk_out
 
 # Compile resources
 aapt2 compile --dir apk_out/res -o compiled_resources.zip
@@ -112,7 +118,10 @@ apksigner sign \
   --out game.apk \
   game_aligned.apk
 
+# Copy fixed APK back to original location
+cp game.apk "$WORKSPACE/build/game.apk"
+
 # Cleanup
-rm -rf apk_out fixed_out compiled_resources.zip fixed.apk game_fixed.apk game_aligned.apk AndroidManifest.xml
+rm -rf apk_out fixed_out compiled_resources.zip fixed.apk game_fixed.apk game_aligned.apk AndroidManifest.xml game.apk debug.keystore
 
 echo "Manifest fixed and APK repackaged"
