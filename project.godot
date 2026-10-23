@@ -5,6 +5,7 @@
 
 config/name="Stealth Game"
 config/icon="icon.svg"
+config/icon_adaptive=false
 run/main_scene="res://scenes/MainGame.tscn"
 
 [display]
