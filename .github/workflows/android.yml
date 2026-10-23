@@ -12,7 +12,7 @@ permissions:
   actions: read
 
 env:
-  GODOT_VERSION: "4.4-stable"
+  GODOT_VERSION: "4.3-stable"
   ANDROID_SDK_VERSION: "34"
   ANDROID_BUILD_TOOLS_VERSION: "34.0.0"
   ANDROID_NDK_VERSION: "27.0.12077973"
@@ -21,7 +21,7 @@ env:
 
 jobs:
   build-android-debug:
-    name: Build Android Debug APK (4.4 Multi-Arch)
+    name: Build Android Debug APK (4.3 Multi-Arch)
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -53,11 +53,11 @@ jobs:
         with:
           path: |
             ~/.cache/godot
-            ~/.local/share/godot/export_templates/4.4.stable
+            ~/.local/share/godot/export_templates/4.3.stable
             debug.keystore
-          key: godot-4.4.stable-fast-${{ hashFiles('project.godot', 'export_presets.cfg') }}
+          key: godot-4.3.stable-fast-${{ hashFiles('project.godot', 'export_presets.cfg') }}
           restore-keys: |
-            godot-4.4.stable-fast-
+            godot-4.3.stable-fast-
 
       - name: Create Debug Keystore (if missing)
         run: |
@@ -85,7 +85,7 @@ jobs:
         run: |
           mkdir -p ~/.cache/godot
           mkdir -p ~/.local/bin
-          mkdir -p ~/.local/share/godot/export_templates/4.4.stable
+          mkdir -p ~/.local/share/godot/export_templates/4.3.stable
           cd ~/.cache/godot
           GODOT_URL="https://github.com/godotengine/godot-builds/releases/download/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}_linux.x86_64.zip"
           echo "Downloading Godot headless from $GODOT_URL"
@@ -101,9 +101,9 @@ jobs:
             mv templates/* .
             rmdir templates
           fi
-          cp android_debug.apk ~/.local/share/godot/export_templates/4.4.stable/
-          cp android_release.apk ~/.local/share/godot/export_templates/4.4.stable/
-          ls -la ~/.local/share/godot/export_templates/4.4.stable/
+          cp android_debug.apk ~/.local/share/godot/export_templates/4.3.stable/
+          cp android_release.apk ~/.local/share/godot/export_templates/4.3.stable/
+          ls -la ~/.local/share/godot/export_templates/4.3.stable/
 
       - name: Ensure Godot Symlink
         run: |
@@ -113,45 +113,19 @@ jobs:
       - name: Verify Godot Installation
         run: |
           godot --version
-          ls -la ~/.local/share/godot/export_templates/4.4.stable/
+          ls -la ~/.local/share/godot/export_templates/4.3.stable/
 
       - name: Inspect Official Template Architectures
         run: |
           echo "=== Debug Template ==="
-          unzip -l ~/.local/share/godot/export_templates/4.4.stable/android_debug.apk | grep "lib/"
+          unzip -l ~/.local/share/godot/export_templates/4.3.stable/android_debug.apk | grep "lib/"
           echo "=== Release Template ==="
-          unzip -l ~/.local/share/godot/export_templates/4.4.stable/android_release.apk | grep "lib/"
+          unzip -l ~/.local/share/godot/export_templates/4.3.stable/android_release.apk | grep "lib/"
 
       - name: Export Android Debug APK
         run: |
           mkdir -p build
           godot --headless --export-debug "Android" build/game.apk
-
-      - name: Merge arm32 libs from template into exported APK
-        run: |
-          echo "Merging armeabi-v7a libs from template into exported APK..."
-          cd build
-          unzip -oq game.apk -d game_arm64
-          unzip -oq ~/.local/share/godot/export_templates/4.4.stable/android_debug.apk -d template_debug
-          mkdir -p game_arm64/lib/armeabi-v7a
-          cp template_debug/lib/armeabi-v7a/libgodot_android.so game_arm64/lib/armeabi-v7a/
-          cp template_debug/lib/armeabi-v7a/libc++_shared.so game_arm64/lib/armeabi-v7a/
-          cd game_arm64
-          zip -r0 ../game_unaligned.apk lib/
-          zip -r9 ../game_unaligned.apk . -x "lib/*"
-          cd ..
-          $ANDROID_HOME/build-tools/34.0.0/zipalign -f -p 4 game_unaligned.apk game_aligned.apk
-          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
-            --ks ../debug.keystore \
-            --ks-pass pass:android \
-            --key-pass pass:android \
-            --v1-signing-enabled true \
-            --v2-signing-enabled true \
-            --v3-signing-enabled true \
-            --out game.apk \
-            game_aligned.apk
-          rm -rf game_arm64 template_debug game_unaligned.apk game_aligned.apk
-          echo "Merge complete - APK properly aligned and signed"
 
       - name: Verify APK Architecture
         run: |
