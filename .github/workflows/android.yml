@@ -60,17 +60,20 @@ jobs:
             godot-4.4.stable-fast-
 
       - name: Create Debug Keystore (if missing)
-        if: steps.cache-godot.outputs.cache-hit != 'true'
         run: |
-          keytool -genkeypair -v \
-            -keystore debug.keystore \
-            -alias androiddebugkey \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US" \
-            -storepass android \
-            -keypass android
+          if [ ! -f debug.keystore ]; then
+            keytool -genkeypair -v \
+              -keystore debug.keystore \
+              -alias androiddebugkey \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US" \
+              -storepass android \
+              -keypass android
+          else
+            echo "Keystore already exists from cache, skipping creation"
+          fi
 
       - name: Ensure Debug Keystore in ~/.android
         run: |
