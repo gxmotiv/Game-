@@ -23,7 +23,7 @@ jobs:
   build-android-debug:
     name: Build Android Debug APK (4.4 Multi-Arch)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repository
@@ -152,11 +152,6 @@ jobs:
             game_aligned.apk
           rm -rf game_arm64 template_debug game_unaligned.apk game_aligned.apk
           echo "Merge complete - APK properly aligned and signed"
-
-      - name: Fix AndroidManifest (remove adaptive icon refs)
-        run: |
-          chmod +x fix_manifest.sh
-          ./fix_manifest.sh build/game.apk debug.keystore
 
       - name: Verify APK Architecture
         run: |
