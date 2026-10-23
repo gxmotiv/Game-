@@ -22,6 +22,22 @@ if [ ! -f "$KEYSTORE_PATH" ]; then
     exit 1
 fi
 
+# Find Android SDK and build tools
+ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+BUILD_TOOLS_DIR="${ANDROID_HOME}/build-tools/34.0.0"
+AAPT2="${BUILD_TOOLS_DIR}/aapt2"
+ZIPALIGN="${BUILD_TOOLS_DIR}/zipalign"
+APKSIGNER="${BUILD_TOOLS_DIR}/apksigner"
+PLATFORM_JAR="${ANDROID_HOME}/platforms/android-34/android.jar"
+
+if [ ! -f "$AAPT2" ]; then
+    echo "Error: aapt2 not found at $AAPT2"
+    echo "Available build tools:"
+    ls -la "${ANDROID_HOME}/build-tools/" || true
+    exit 1
+fi
+
+echo "Using aapt2 at: $AAPT2"
 echo "Fixing AndroidManifest.xml to remove adaptive icon references..."
 
 # Create temp directory
@@ -76,20 +92,27 @@ ET.SubElement(intent_filter, 'category', {'{http://schemas.android.com/apk/res/a
 ET.ElementTree(manifest).write('AndroidManifest.xml', encoding='utf-8', xml_declaration=True)
 "
 
-# Compile resources and link with aapt2
-ANDROID_HOME="${ANDROID_HOME:-/usr/lib/android-sdk}"
-BUILD_TOOLS="${ANDROID_HOME}/build-tools/34.0.0"
+# Use full paths to Android SDK tools
+AAPT2="${BUILD_TOOLS_DIR}/aapt2"
+ZIPALIGN="${BUILD_TOOLS_DIR}/zipalign"
+APKSIGNER="${BUILD_TOOLS_DIR}/apksigner"
+PLATFORM_JAR="${ANDROID_HOME}/platforms/android-34/android.jar"
+
+if [ ! -f "$AAPT2" ]; then
+    echo "Error: aapt2 not found at $AAPT2"
+    exit 1
+fi
 
 # Extract APK
 unzip -oq game.apk -d apk_out
 
 # Compile resources
-aapt2 compile --dir apk_out/res -o compiled_resources.zip
+"$AAPT2" compile --dir apk_out/res -o compiled_resources.zip
 
 # Link manifest and resources
-aapt2 link \
+"$AAPT2" link \
   --manifest AndroidManifest.xml \
-  -I /usr/lib/android-sdk/platforms/android-34/android.jar \
+  -I "$PLATFORM_JAR" \
   -o fixed.apk \
   --java /dev/null \
   compiled_resources.zip
@@ -107,8 +130,8 @@ zip -r0 ../game_fixed.apk .
 cd ..
 
 # Align and sign
-zipalign -f -p 4 game_fixed.apk game_aligned.apk
-apksigner sign \
+"$ZIPALIGN" -f -p 4 game_fixed.apk game_aligned.apk
+"$APKSIGNER" sign \
   --ks debug.keystore \
   --ks-pass pass:android \
   --key-pass pass:android \
