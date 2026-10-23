@@ -47,16 +47,37 @@ jobs:
             "cmake;${{ env.CMAKE_VERSION }}" \
             "platform-tools"
 
-      - name: Cache Godot and Official Export Templates
+      - name: Cache Godot, Export Templates, and Debug Keystore
         id: cache-godot
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/godot
             ~/.local/share/godot/export_templates/4.4.stable
+            debug.keystore
           key: godot-4.4.stable-fast-${{ hashFiles('project.godot', 'export_presets.cfg') }}
           restore-keys: |
             godot-4.4.stable-fast-
+
+      - name: Create or Restore Debug Keystore
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          keytool -genkeypair -v \
+            -keystore debug.keystore \
+            -alias androiddebugkey \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US" \
+            -storepass android \
+            -keypass android
+          mkdir -p ~/.android
+          cp debug.keystore ~/.android/debug.keystore
+
+      - name: Ensure Debug Keystore Available
+        if: steps.cache-godot.outputs.cache-hit == 'true'
+        run: |
+          cp debug.keystore ~/.android/debug.keystore
 
       - name: Download Godot Headless + Official Export Templates
         if: steps.cache-godot.outputs.cache-hit != 'true'
@@ -103,20 +124,6 @@ jobs:
           unzip -l ~/.local/share/godot/export_templates/4.4.stable/android_debug.apk | grep "lib/"
           echo "=== Release Template ==="
           unzip -l ~/.local/share/godot/export_templates/4.4.stable/android_release.apk | grep "lib/"
-
-      - name: Create Debug Keystore
-        run: |
-          keytool -genkeypair -v \
-            -keystore debug.keystore \
-            -alias androiddebugkey \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US" \
-            -storepass android \
-            -keypass android
-          mkdir -p ~/.android
-          cp debug.keystore ~/.android/debug.keystore
 
       - name: Export Android Debug APK
         run: |
