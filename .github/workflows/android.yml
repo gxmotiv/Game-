@@ -59,7 +59,7 @@ jobs:
           restore-keys: |
             godot-4.4.stable-fast-
 
-      - name: Create or Restore Debug Keystore
+      - name: Create Debug Keystore (if missing)
         if: steps.cache-godot.outputs.cache-hit != 'true'
         run: |
           keytool -genkeypair -v \
@@ -71,12 +71,10 @@ jobs:
             -dname "CN=Android Debug,O=Android,C=US" \
             -storepass android \
             -keypass android
-          mkdir -p ~/.android
-          cp debug.keystore ~/.android/debug.keystore
 
-      - name: Ensure Debug Keystore Available
-        if: steps.cache-godot.outputs.cache-hit == 'true'
+      - name: Ensure Debug Keystore in ~/.android
         run: |
+          mkdir -p ~/.android
           cp debug.keystore ~/.android/debug.keystore
 
       - name: Download Godot Headless + Official Export Templates
