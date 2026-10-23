@@ -1,4 +1,4 @@
-; Engine configuration file for Godot 4.4
+; Engine configuration file for Godot 4.3
 ; This file should be committed to version control
 
 [application]
@@ -128,4 +128,4 @@ interface/inspector/default_scroll_past_end=false
 [project]
 
 config_version=5
-godot_version="4.4"
+godot_version="4.3"
