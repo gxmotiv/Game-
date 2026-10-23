@@ -87,6 +87,11 @@ jobs:
           cp android_release.apk ~/.local/share/godot/export_templates/4.4.stable/
           ls -la ~/.local/share/godot/export_templates/4.4.stable/
 
+      - name: Ensure Godot Symlink
+        run: |
+          mkdir -p ~/.local/bin
+          ln -sf ~/.cache/godot/Godot_v${{ env.GODOT_VERSION }}_linux.x86_64 ~/.local/bin/godot
+
       - name: Verify Godot Installation
         run: |
           godot --version
