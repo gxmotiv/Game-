@@ -131,7 +131,7 @@ jobs:
           mkdir -p build
           godot --headless --export-debug "Android" build/game.apk
 
-      - name: Merge arm32 libs from template into exported APK (proper APK repackaging)
+- name: Merge arm32 libs from template into exported APK (proper APK repackaging)
         run: |
           echo "Merging armeabi-v7a libs from template into exported APK..."
           cd build
@@ -164,6 +164,76 @@ jobs:
             game_aligned.apk
           rm -rf game_arm64 template_debug game_unaligned.apk game_aligned.apk
           echo "Merge complete - APK properly aligned and signed"
+
+      - name: Fix AndroidManifest (remove adaptive icon refs causing Invalid ID 0x00000000)
+        run: |
+          echo "Fixing AndroidManifest.xml to remove adaptive icon references..."
+          cd build
+          # Use aapt2 to dump manifest, then relink with only legacy icon
+          mkdir -p apk_out
+          # Extract APK resources
+          unzip -oq game.apk -d apk_out
+          # Create a minimal manifest without adaptive icons
+          cat > AndroidManifest.xml << 'MANIFEST_EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.stealthgame"
+    android:versionCode="1"
+    android:versionName="1.0.0"
+    android:installLocation="auto">
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="34" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
+    <uses-feature android:name="android.hardware.screen.landscape" android:required="false" />
+    <application
+        android:label="Stealth Game"
+        android:icon="@mipmap/icon"
+        android:debuggable="true"
+        android:allowBackup="false"
+        android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+        android:hardwareAccelerated="true">
+        <activity
+            android:name="com.godot.GodotActivity"
+            android:label="Stealth Game"
+            android:configChanges="orientation|screenSize|keyboardHidden|navigation"
+            android:screenOrientation="sensorLandscape"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustPan">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+MANIFEST_EOF
+          # Use aapt2 to compile manifest and resources
+          $ANDROID_HOME/build-tools/34.0.0/aapt2 compile --dir apk_out/res -o compiled_resources.zip
+          $ANDROID_HOME/build-tools/34.0.0/aapt2 link --manifest AndroidManifest.xml -I $ANDROID_HOME/platforms/android-34/android.jar -o fixed.apk --java /dev/null compiled_resources.zip
+          # Merge the fixed manifest/resources back into the APK
+          unzip -oq fixed.apk -d fixed_out
+          cd apk_out
+          # Replace manifest and resources
+          cp ../fixed_out/AndroidManifest.xml AndroidManifest.xml
+          cp -r ../fixed_out/res/* res/
+          cd ..
+          # Repackage
+          cd apk_out
+          zip -r0 ../game_fixed.apk .
+          cd ..
+          # Align and sign
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -f -p 4 game_fixed.apk game_aligned.apk
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+            --ks debug.keystore \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --v1-signing-enabled true \
+            --v2-signing-enabled true \
+            --v3-signing-enabled true \
+            --out game.apk \
+            game_aligned.apk
+          rm -rf apk_out fixed_out compiled_resources.zip fixed.apk game_fixed.apk game_aligned.apk AndroidManifest.xml
+          echo "Manifest fixed and APK repackaged"
 
       - name: Verify APK Architecture
         run: |
