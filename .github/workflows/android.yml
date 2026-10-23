@@ -123,11 +123,11 @@ jobs:
           mkdir -p build
           godot --headless --export-debug "Android" build/game.apk
 
-      - name: Merge arm32 libs from template into exported APK
+      - name: Merge arm32 libs from template into exported APK (proper APK repackaging)
         run: |
           echo "Merging armeabi-v7a libs from template into exported APK..."
           cd build
-          # Extract exported APK (arm64-only)
+          # Extract exported APK (arm64-only, has game code)
           unzip -oq game.apk -d game_arm64
           # Extract template debug APK (has all architectures)
           unzip -oq ~/.local/share/godot/export_templates/4.4.stable/android_debug.apk -d template_debug
@@ -135,12 +135,27 @@ jobs:
           mkdir -p game_arm64/lib/armeabi-v7a
           cp template_debug/lib/armeabi-v7a/libgodot_android.so game_arm64/lib/armeabi-v7a/
           cp template_debug/lib/armeabi-v7a/libc++_shared.so game_arm64/lib/armeabi-v7a/
-          # Repackage
+          # Repackage with proper APK structure: store (no compression) for lib/, deflate for rest
           cd game_arm64
-          zip -r ../game.apk .
+          # First add libs with store (no compression) - required for native libs
+          zip -r0 ../game_unaligned.apk lib/
+          # Then add everything else with deflate compression
+          zip -r9 ../game_unaligned.apk . -x "lib/*"
           cd ..
-          rm -rf game_arm64 template_debug
-          echo "Merge complete"
+          # Align APK (4-byte alignment required for mmap)
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -f -p 4 game_unaligned.apk game_aligned.apk
+          # Sign APK with debug keystore (v1 + v2 + v3)
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+            --ks ../debug.keystore \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --v1-signing-enabled true \
+            --v2-signing-enabled true \
+            --v3-signing-enabled true \
+            --out game.apk \
+            game_aligned.apk
+          rm -rf game_arm64 template_debug game_unaligned.apk game_aligned.apk
+          echo "Merge complete - APK properly aligned and signed"
 
       - name: Verify APK Architecture
         run: |
@@ -152,6 +167,11 @@ jobs:
           echo ""
           echo "=== Native Libraries ==="
           unzip -l build/game.apk | grep "lib/"
+
+      - name: Verify APK Signature
+        run: |
+          echo "=== APK Signature Verification ==="
+          $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose --print-certs build/game.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
