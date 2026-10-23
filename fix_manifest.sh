@@ -25,9 +25,9 @@ fi
 # Find Android SDK and build tools
 ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
 BUILD_TOOLS_DIR="${ANDROID_HOME}/build-tools/34.0.0"
-AAPT2="${ANDROID_HOME}/build-tools/34.0.0/aapt2"
-ZIPALIGN="${ANDROID_HOME}/build-tools/34.0.0/zipalign"
-APKSIGNER="${ANDROID_HOME}/build-tools/34.0.0/apksigner"
+AAPT2="${BUILD_TOOLS_DIR}/aapt2"
+ZIPALIGN="${BUILD_TOOLS_DIR}/zipalign"
+APKSIGNER="${BUILD_TOOLS_DIR}/apksigner"
 PLATFORM_JAR="${ANDROID_HOME}/platforms/android-34/android.jar"
 
 if [ ! -f "$AAPT2" ]; then
@@ -101,8 +101,16 @@ PLATFORM_JAR="${ANDROID_HOME}/platforms/android-34/android.jar"
 # Extract original APK
 unzip -oq game.apk -d apk_out
 
+# Check if mipmap/icon.png exists in the extracted APK
+if [ ! -f "apk_out/res/mipmap-hdpi-v4/icon.png" ]; then
+    echo "Warning: No legacy icon found in APK, copying from template..."
+    # Copy icon from template if missing
+    unzip -oq ~/.local/share/godot/export_templates/4.4.stable/android_debug.apk -d template_out
+    cp -r template_out/res/mipmap* apk_out/res/ 2>/dev/null || true
+    cp -r template_out/res/drawable* apk_out/res/ 2>/dev/null || true
+fi
+
 # Replace the binary manifest in the extracted APK
-# The manifest in the APK is at AndroidManifest.xml (binary XML)
 cp manifest.flat apk_out/AndroidManifest.xml
 
 # Repackage APK without recompiling resources (just zip)
