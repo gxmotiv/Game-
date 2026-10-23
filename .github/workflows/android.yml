@@ -127,6 +127,32 @@ jobs:
           mkdir -p build
           godot --headless --export-debug "Android" build/game.apk
 
+      - name: Merge arm32 libs from template into exported APK
+        run: |
+          echo "Merging armeabi-v7a libs from template into exported APK..."
+          cd build
+          unzip -oq game.apk -d game_arm64
+          unzip -oq ~/.local/share/godot/export_templates/4.3.stable/android_debug.apk -d template_debug
+          mkdir -p game_arm64/lib/armeabi-v7a
+          cp template_debug/lib/armeabi-v7a/libgodot_android.so game_arm64/lib/armeabi-v7a/
+          cp template_debug/lib/armeabi-v7a/libc++_shared.so game_arm64/lib/armeabi-v7a/
+          cd game_arm64
+          zip -r0 ../game_unaligned.apk lib/
+          zip -r9 ../game_unaligned.apk . -x "lib/*"
+          cd ..
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -f -p 4 game_unaligned.apk game_aligned.apk
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+            --ks ../debug.keystore \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --v1-signing-enabled true \
+            --v2-signing-enabled true \
+            --v3-signing-enabled true \
+            --out game.apk \
+            game_aligned.apk
+          rm -rf game_arm64 template_debug game_unaligned.apk game_aligned.apk
+          echo "Merge complete - APK properly aligned and signed"
+
       - name: Verify APK Architecture
         run: |
           echo "=== APK Info ==="
