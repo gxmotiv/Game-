@@ -23,7 +23,7 @@ jobs:
   build-android-debug:
     name: Build Android Debug APK (4.4 Multi-Arch)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -87,16 +87,12 @@ jobs:
           mkdir -p ~/.local/bin
           mkdir -p ~/.local/share/godot/export_templates/4.4.stable
           cd ~/.cache/godot
-          
-          # Download Godot headless binary
           GODOT_URL="https://github.com/godotengine/godot-builds/releases/download/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}_linux.x86_64.zip"
           echo "Downloading Godot headless from $GODOT_URL"
           wget -q "$GODOT_URL" -O godot.zip
           unzip -oq godot.zip
           chmod +x Godot_v${{ env.GODOT_VERSION }}_linux.x86_64
           ln -sf ~/.cache/godot/Godot_v${{ env.GODOT_VERSION }}_linux.x86_64 ~/.local/bin/godot
-          
-          # Download official export templates (multi-arch: arm64 + arm32)
           TEMPLATES_URL="https://github.com/godotengine/godot-builds/releases/download/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}_export_templates.tpz"
           echo "Downloading official export templates from $TEMPLATES_URL"
           wget -q "$TEMPLATES_URL" -O templates.tpz
@@ -131,28 +127,20 @@ jobs:
           mkdir -p build
           godot --headless --export-debug "Android" build/game.apk
 
-- name: Merge arm32 libs from template into exported APK (proper APK repackaging)
+      - name: Merge arm32 libs from template into exported APK
         run: |
           echo "Merging armeabi-v7a libs from template into exported APK..."
           cd build
-          # Extract exported APK (arm64-only, has game code)
           unzip -oq game.apk -d game_arm64
-          # Extract template debug APK (has all architectures)
           unzip -oq ~/.local/share/godot/export_templates/4.4.stable/android_debug.apk -d template_debug
-          # Copy arm32 libs
           mkdir -p game_arm64/lib/armeabi-v7a
           cp template_debug/lib/armeabi-v7a/libgodot_android.so game_arm64/lib/armeabi-v7a/
           cp template_debug/lib/armeabi-v7a/libc++_shared.so game_arm64/lib/armeabi-v7a/
-          # Repackage with proper APK structure: store (no compression) for lib/, deflate for rest
           cd game_arm64
-          # First add libs with store (no compression) - required for native libs
           zip -r0 ../game_unaligned.apk lib/
-          # Then add everything else with deflate compression
           zip -r9 ../game_unaligned.apk . -x "lib/*"
           cd ..
-          # Align APK (4-byte alignment required for mmap)
           $ANDROID_HOME/build-tools/34.0.0/zipalign -f -p 4 game_unaligned.apk game_aligned.apk
-          # Sign APK with debug keystore (v1 + v2 + v3)
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
             --ks ../debug.keystore \
             --ks-pass pass:android \
@@ -165,75 +153,10 @@ jobs:
           rm -rf game_arm64 template_debug game_unaligned.apk game_aligned.apk
           echo "Merge complete - APK properly aligned and signed"
 
-      - name: Fix AndroidManifest (remove adaptive icon refs causing Invalid ID 0x00000000)
+      - name: Fix AndroidManifest (remove adaptive icon refs)
         run: |
-          echo "Fixing AndroidManifest.xml to remove adaptive icon references..."
-          cd build
-          # Use aapt2 to dump manifest, then relink with only legacy icon
-          mkdir -p apk_out
-          # Extract APK resources
-          unzip -oq game.apk -d apk_out
-          # Create a minimal manifest without adaptive icons
-          cat > AndroidManifest.xml << 'MANIFEST_EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.stealthgame"
-    android:versionCode="1"
-    android:versionName="1.0.0"
-    android:installLocation="auto">
-    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="34" />
-    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
-    <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
-    <uses-feature android:name="android.hardware.screen.landscape" android:required="false" />
-    <application
-        android:label="Stealth Game"
-        android:icon="@mipmap/icon"
-        android:debuggable="true"
-        android:allowBackup="false"
-        android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-        android:hardwareAccelerated="true">
-        <activity
-            android:name="com.godot.GodotActivity"
-            android:label="Stealth Game"
-            android:configChanges="orientation|screenSize|keyboardHidden|navigation"
-            android:screenOrientation="sensorLandscape"
-            android:launchMode="singleTask"
-            android:windowSoftInputMode="adjustPan">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-</manifest>
-MANIFEST_EOF
-          # Use aapt2 to compile manifest and resources
-          $ANDROID_HOME/build-tools/34.0.0/aapt2 compile --dir apk_out/res -o compiled_resources.zip
-          $ANDROID_HOME/build-tools/34.0.0/aapt2 link --manifest AndroidManifest.xml -I $ANDROID_HOME/platforms/android-34/android.jar -o fixed.apk --java /dev/null compiled_resources.zip
-          # Merge the fixed manifest/resources back into the APK
-          unzip -oq fixed.apk -d fixed_out
-          cd apk_out
-          # Replace manifest and resources
-          cp ../fixed_out/AndroidManifest.xml AndroidManifest.xml
-          cp -r ../fixed_out/res/* res/
-          cd ..
-          # Repackage
-          cd apk_out
-          zip -r0 ../game_fixed.apk .
-          cd ..
-          # Align and sign
-          $ANDROID_HOME/build-tools/34.0.0/zipalign -f -p 4 game_fixed.apk game_aligned.apk
-          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
-            --ks debug.keystore \
-            --ks-pass pass:android \
-            --key-pass pass:android \
-            --v1-signing-enabled true \
-            --v2-signing-enabled true \
-            --v3-signing-enabled true \
-            --out game.apk \
-            game_aligned.apk
-          rm -rf apk_out fixed_out compiled_resources.zip fixed.apk game_fixed.apk game_aligned.apk AndroidManifest.xml
-          echo "Manifest fixed and APK repackaged"
+          chmod +x fix_manifest.sh
+          ./fix_manifest.sh build/game.apk debug.keystore
 
       - name: Verify APK Architecture
         run: |
